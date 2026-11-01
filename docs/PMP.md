@@ -32,7 +32,7 @@
 | İlker Bulut | ilkerbdev | Developer (full stack), team contact person, owner of M1, M2 |
 | Kerem Elmacı | keremelmaci | Developer (full stack), owner of M3, M4, M7 |
 | Rahman Ateş | rahmanats10 | Developer (full stack), owner of M5, M6, M8 |
-| Rasül Hakan Fidan | RHF29 | Tester: test planning, liaison with the SENG 440 test team, weekly meeting notes |
+| Rasül Hakan Fidan | RHF29 | Tester: test planning, end-to-end tests, pull request reviews, weekly meeting notes |
 
 ### Working Agreements
 
@@ -40,7 +40,7 @@
 - Commit messages and branch names start with the Jira key, e.g. `SCRUM-12 Add login API`, branch `SCRUM-12-login-api`.
 - All changes go to `main` through a pull request reviewed by at least one other member.
 - A task is **Done** only when its pull request is merged into `main`.
-- Weekly meeting with the test team; notes are committed to `docs/meetings/`.
+- Weekly team meeting; notes are committed to `docs/meetings/`.
 
 ---
 
