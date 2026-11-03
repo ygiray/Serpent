@@ -1,7 +1,7 @@
 # Project Management Plan (PMP)
 
 **Team:** Serpent (Group 11, Section 1)  
-**Last updated:** 2026-11-02
+**Last updated:** 2026-11-03
 
 | Section | Content | Required by | Status |
 |---|---|---|---|
@@ -29,10 +29,10 @@
 | Name | Jira / GitHub username | Role |
 |---|---|---|
 | Yusuf Giray Çakıcı | ygiray | Project Manager and developer (full stack): Jira board, PMP; owner of M2 |
-| İlker Bulut | ilkerbdev | Developer (full stack), team contact person; owner of M1, M7 |
+| İlker Bulut | ilkerbdev | Developer (full stack), team contact person; owner of M1 |
 | Kerem Elmacı | keremelmaci | Developer (full stack); owner of M4, M5 |
 | Rahman Ateş | rahmanats10 | Developer (full stack); owner of M3, M8 |
-| Rasül Hakan Fidan | RHF29 | Tester and developer (full stack): test planning, weekly meeting notes; owner of M6 |
+| Rasül Hakan Fidan | RHF29 | Tester and developer (full stack): test planning, weekly meeting notes; owner of M6, M7 |
 
 ### Working Agreements
 
@@ -57,7 +57,7 @@
 | M4 – Tasks | Kerem Elmacı | 6 | Sprint 2, 4 |
 | M5 – Specialist entries | Kerem Elmacı | 5 | Sprint 3, 4 |
 | M6 – Documents | Rasül Hakan Fidan | 5 | Sprint 3, 4 |
-| M7 – Weekly statistics | İlker Bulut | 4 | Sprint 3, 4 |
+| M7 – Weekly statistics | Rasül Hakan Fidan | 4 | Sprint 3, 4 |
 | M8 – Role-based AI summary | Rahman Ateş | 6 | Sprint 3, 4 |
 | SRS – Requirements specification | Yusuf Giray Çakıcı | 5 | Sprint 1 |
 | DESIGN – Software design document | Yusuf Giray Çakıcı | 5 | Sprint 1 |
