@@ -73,8 +73,8 @@ flowchart LR
 | M1 | | FR-M1-01, … |
 | M2 | Frontend: `LinkedSpecialistsPage` (parent), `MyChildrenPage` (specialist). Backend: `routes/links.js`, `services/linkService.js`, shared middleware `requireChildAccess` used by all child endpoints. Table: `specialist_links`. | FR-M2-01 … FR-M2-08 |
 | M3 | | |
-| M4 | | |
-| M5 | | |
+| M4 | Frontend: `TaskForm` for assigning tasks, `ChildTasksPage` for viewing and completing a child's tasks, and `AssignedTasksList` for tracking assigned tasks. Backend: `routes/tasks.js` and `services/taskService.js` handle task validation, status updates, and filtering by assigner. Table: `tasks`. | FR-M4-01 ... FR-M4-08 |
+| M5 | Frontend: `EntryForm` for adding observations and `EntryList` for displaying entries with an "edited" label. Backend: `routes/entries.js` and `services/entryService.js` handle observation records, author permissions, and the `isEdited` flag. Table: `entries`. | FR-M5-01 ... FR-M5-06 |
 | M6 | | |
 | M7 | | |
 | M8 | | |
@@ -119,6 +119,29 @@ erDiagram
 | Method | Endpoint | Description | Module |
 |---|---|---|---|
 | GET | `/api/health` | Health check (walking skeleton) | – |
+| POST | `/api/auth/login` | Accepts email and password; returns a token and user information including role | M1 |
+| GET | `/api/auth/me` | Returns the authenticated user's information using the token | M1 |
+| GET | `/api/children` | Lists children accessible to the signed-in user according to their role | M1, M2 |
+| GET | `/api/children/:childId/links` | Shows specialists currently linked to the child; accessible to the parent | M2 |
+| POST | `/api/children/:childId/links` | Allows the parent to link a registered specialist using email and specialistType | M2 |
+| DELETE | `/api/children/:childId/links/:linkId` | Removes a specialist's link to the child so access is no longer permitted | M2 |
+| GET | `/api/children/:childId/tasks?week=&assignedBy=me` | Retrieves the child's tasks, with optional filters for week and tasks assigned by the current user | M4 |
+| POST | `/api/children/:childId/tasks` | Allows a parent or linked specialist to assign a task to the child | M4 |
+| PATCH | `/api/children/:childId/tasks/:taskId` | Lets the child mark their own task as done and updates its completion status | M4 |
+| GET | `/api/children/:childId/entries` | Lists dated specialist observations for authorized parents and linked specialists; children cannot access them | M5 |
+| POST | `/api/children/:childId/entries` | Allows a linked specialist to add a dated observation for the child | M5 |
+| PATCH | `/api/children/:childId/entries/:entryId` | Updates a specialist observation and marks the entry as edited | M5 |
+| GET | `/api/children/:childId/events?week=` | Returns the child's events for the requested week | M3 |
+| POST | `/api/children/:childId/events` | Allows a parent or linked specialist to create a schedule event | M3 |
+| PATCH | `/api/children/:childId/events/:eventId` | Updates an existing event when the user has permission | M3 |
+| DELETE | `/api/children/:childId/events/:eventId` | Deletes an event when the user has permission | M3 |
+| GET | `/api/children/:childId/documents` | Lists documents available to authorized users; children cannot access them | M6 |
+| POST | `/api/children/:childId/documents` | Uploads a PDF or image document for the child | M6 |
+| GET | `/api/children/:childId/documents/:documentId/file` | Returns a document file for viewing or downloading by an authorized user | M6 |
+| GET | `/api/children/:childId/stats?week=` | Returns the selected week's task completion rate, overall and grouped by development area | M7 |
+| POST | `/api/children/:childId/summaries` | Generates an AI summary of the child's records using the requesting user's role | M8 |
+| GET | `/api/children/:childId/summaries/:summaryId` | Returns an AI-generated summary with its source records and label | M8 |
+| PATCH | `/api/children/:childId/summaries/:summaryId` | Updates the feedback recorded for an AI-generated summary | M8 |
 
 ---
 
