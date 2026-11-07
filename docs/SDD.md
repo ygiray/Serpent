@@ -248,8 +248,13 @@ sequenceDiagram
 
 | Screen | Image | Module |
 |---|---|---|
-| | `docs/img/…` | |
-
+| Login: email, password, "Log in" button, error message area | `docs/img/login.png` | M1 |
+| Parent – weekly dashboard: weekly schedule, task list with "Assign task", recent specialist entries, weekly statistics, AI summary card | `docs/img/parent-dashboard.png` | M3, M4, M5, M7, M8 |
+| Child – my tasks: task list with "Mark as done", upcoming events | `docs/img/child-tasks.png` | M1, M3, M4 |
+| Specialist – child profile and new entry: linked children list, entry form, entries with "edited" badge, AI summary | `docs/img/specialist-child.png` | M2, M5, M8 |
+| Specialist – assigning and tracking tasks: task form, assigned tasks with status | `docs/img/specialist-tasks.png` | M4 |
+| Parent – linked specialists: email + type form, list, "Unlink" with confirmation | `docs/img/linked-specialists.png` | M2 |
+| Parent – documents: upload form, list (name, type, uploader, date), view/download | `docs/img/documents.png` | M6 |
 ---
 
 ## 7. Change Log
