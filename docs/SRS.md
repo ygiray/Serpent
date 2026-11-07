@@ -78,7 +78,14 @@ Roles come from the account; a user does not choose a role at login. All data in
 
 | ID | Requirement | Priority |
 |---|---|---|
-| FR-M4-01 | | |
+| FR-M4-01 | A parent or a specialist linked to the child can create a task by entering its title, description, development area, and due date. | Must |
+| FR-M4-02 | The system must display an error and prevent task creation if the title, development area, or due date is missing. | Must |
+| FR-M4-03 | Every newly assigned task starts with a pending status, and the system records who assigned it. | Must |
+| FR-M4-04 | A child can view their own tasks, including the title, description, due date, and current status. | Must |
+| FR-M4-05 | A child can complete their own pending task, and the system records when it was completed. | Must |
+| FR-M4-06 | Parents and linked specialists can check the current status of tasks they assigned to a child. | Must |
+| FR-M4-07 | A parent can view all tasks assigned to their child, regardless of who created them. | Must |
+| FR-M4-08 | As an optional feature, an assigner can set a task to repeat on a regular schedule, such as daily or weekly. | Could |
 
 ### M5 – Specialist Entries
 
@@ -88,7 +95,12 @@ Roles come from the account; a user does not choose a role at login. All data in
 
 | ID | Requirement | Priority |
 |---|---|---|
-| FR-M5-01 | | |
+| FR-M5-01 | A specialist linked to a child can write an observation with a date, text, and an optional development area. | Must |
+| FR-M5-02 | Parents and linked specialists can view the child's observations, ordered from newest to oldest, with the date, author's name, and specialist type. | Must |
+| FR-M5-03 | Only the specialist who created an observation can edit it; editing attempts by other users are denied with HTTP 403. | Must |
+| FR-M5-04 | When an observation is updated, the system displays an edited label and records the time of the most recent change. | Must |
+| FR-M5-05 | Children cannot view specialist observations, and the API denies their requests with HTTP 403. | Must |
+| FR-M5-06 | As an optional feature, the system can store and display the complete edit history of an observation. | Could |
 
 ### M6 – Documents
 
