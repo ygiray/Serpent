@@ -75,8 +75,8 @@ flowchart LR
 | M3 | Frontend: `WeeklySchedule` component (shared by parent, specialist and child screens), `EventForm`. Backend: `routes/events.js`, `services/eventService.js` (filters events by week, checks that the end time is after the start time). Table: `events`. | FR-M3-01 … FR-M3-07 |
 | M4 | Frontend: `TaskForm` for assigning tasks, `ChildTasksPage` for viewing and completing a child's tasks, and `AssignedTasksList` for tracking assigned tasks. Backend: `routes/tasks.js` and `services/taskService.js` handle task validation, status updates, and filtering by assigner. Table: `tasks`. | FR-M4-01 ... FR-M4-08 |
 | M5 | Frontend: `EntryForm` for adding observations and `EntryList` for displaying entries with an "edited" label. Backend: `routes/entries.js` and `services/entryService.js` handle observation records, author permissions, and the `isEdited` flag. Table: `entries`. | FR-M5-01 ... FR-M5-06 |
-| M6 | | |
-| M7 | | |
+| M6 | Frontend: `DocumentsPage` (upload form + list with view/download). Backend: `routes/documents.js` with multer (file type and size check), `services/documentService.js`, files stored in `server/uploads/` (not committed). Table: `documents`. | FR-M6-01 … FR-M6-06 |
+| M7 | Frontend: `WeeklyStatsPanel` (week picker, total completion rate, rate per development area). Backend: `routes/stats.js`, `services/statsService.js` (one SQL query grouped by `developmentArea` over `tasks`). No own table. | FR-M7-01 … FR-M7-05 |
 | M8 | Frontend: `AiSummaryCard` ("AI-generated" label, links to source records, "Helpful" / "Incorrect" buttons). Backend: `routes/summaries.js`, `services/summaryService.js` (collects the week's records the user is allowed to see), `ai/index.js` (calls Gemini or returns a mock answer, depending on `AI_MODE`), `ai/prompts.js` (parent and specialist prompts). Table: `ai_summaries`. | FR-M8-01 … FR-M8-09 |
 
 ---
