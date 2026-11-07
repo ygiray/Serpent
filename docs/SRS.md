@@ -39,11 +39,18 @@ Roles come from the account; a user does not choose a role at login. All data in
 
 **Owner:** İlker (SCRUM-79)
 
-> Acceptance level: Email and password login; each role sees only its own screens. Release: v0.1.
-
 | ID | Requirement | Priority |
 |---|---|---|
-| FR-M1-01 | | |
+| FR-M1-01 | The system shall allow a registered user to log in with email and password. | Must |
+| FR-M1-02 | The system shall reject a login with a wrong email or password, show an error message that does not say which of the two was wrong, and issue no token. | Must |
+| FR-M1-03 | The system shall take the user's role (parent, specialist or child) from the account; the login screen shall not let the user choose a role. | Must |
+| FR-M1-04 | The system shall open the home screen of the user's role after a successful login (parent: weekly dashboard, specialist: list of linked children, child: my tasks). | Must |
+| FR-M1-05 | The system shall show each role only its own screens and menu items; opening a screen of another role shall redirect the user to their own home screen. | Must |
+| FR-M1-06 | The system shall keep the user logged in across page refreshes until the token expires or the user logs out. | Should |
+| FR-M1-07 | The system shall allow a logged-in user to log out, after which protected screens are not accessible without logging in again. | Must |
+| FR-M1-08 | The system shall provide a seed script that creates synthetic demo accounts for each role, a child, links and sample records. | Should |
+| FR-M1-09 | The login screen shall offer demo account buttons that fill in the credentials of a seeded account. | Could |
+
 
 ### M2 – Linking Specialists
 
