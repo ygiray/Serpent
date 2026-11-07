@@ -85,24 +85,103 @@ flowchart LR
 
 **Owner:** İlker (SCRUM-42)
 
-> Use these entity names (tables are the plural snake_case form, e.g. `specialist_links`). Add the fields and relationships, and draw the ER diagram in Mermaid.
->
-> | Entity | Meaning |
-> |---|---|
-> | User | Account with email, password hash and role (`parent`, `specialist`, `child`) |
-> | Child | A child's profile; belongs to one parent; may be linked to one child User account |
-> | SpecialistLink | Link between a specialist User and a Child, with specialist type |
-> | Event | Weekly schedule item for a child (M3) |
-> | Task | Task for a child, with development area, due date, status and assigner (M4) |
-> | Entry | Dated specialist observation about a child, with an edited flag (M5) |
-> | Document | Uploaded PDF or image about a child (M6) |
-> | AiSummary | A generated weekly summary, with role, week and source record references (M8) |
+Each child has one parent and may have one child login account. A specialist can be linked to many children and a child can have many specialists, through `specialist_links`. Unlinking deletes the link row, so access ends immediately. All child records (events, tasks, entries, documents, AI summaries) belong to one child and store the user who created them.
 
 ```mermaid
 erDiagram
-    USER ||--o{ CHILD : "parent of"
+    USERS ||--o{ CHILDREN : "is parent of"
+    USERS |o--o| CHILDREN : "is login of"
+    USERS ||--o{ SPECIALIST_LINKS : "specialist in"
+    CHILDREN ||--o{ SPECIALIST_LINKS : "has"
+    CHILDREN ||--o{ EVENTS : "has"
+    CHILDREN ||--o{ TASKS : "has"
+    CHILDREN ||--o{ ENTRIES : "has"
+    CHILDREN ||--o{ DOCUMENTS : "has"
+    CHILDREN ||--o{ AI_SUMMARIES : "has"
+    USERS ||--o{ EVENTS : "creates"
+    USERS ||--o{ TASKS : "assigns"
+    USERS ||--o{ ENTRIES : "writes"
+    USERS ||--o{ DOCUMENTS : "uploads"
+    USERS ||--o{ AI_SUMMARIES : "requests"
+
+    USERS {
+        int id PK
+        string email UK
+        string passwordHash
+        string name
+        string role "parent | specialist | child"
+        datetime createdAt
+    }
+    CHILDREN {
+        int id PK
+        int parentId FK
+        int userId FK "child login, nullable"
+        string name
+        date birthDate
+    }
+    SPECIALIST_LINKS {
+        int id PK
+        int childId FK
+        int specialistId FK
+        string specialistType
+        datetime createdAt
+    }
+    EVENTS {
+        int id PK
+        int childId FK
+        int createdBy FK
+        string title
+        string description
+        datetime startsAt
+        datetime endsAt
+    }
+    TASKS {
+        int id PK
+        int childId FK
+        int assignedBy FK
+        string title
+        string description
+        string developmentArea
+        date dueDate
+        string status "pending | done"
+        datetime completedAt
+        datetime createdAt
+    }
+    ENTRIES {
+        int id PK
+        int childId FK
+        int specialistId FK
+        date entryDate
+        string text
+        string developmentArea
+        boolean isEdited
+        datetime createdAt
+        datetime updatedAt
+    }
+    DOCUMENTS {
+        int id PK
+        int childId FK
+        int uploadedBy FK
+        string fileName
+        string storedName
+        string mimeType
+        int sizeBytes
+        datetime uploadedAt
+    }
+    AI_SUMMARIES {
+        int id PK
+        int childId FK
+        int requestedBy FK
+        string readerRole "parent | specialist"
+        date weekStart
+        string text
+        string sourceRecords "JSON list of record ids"
+        string feedback "helpful | incorrect | null"
+        datetime createdAt
+    }
 ```
 
+Constraints: `users.email` is unique; `(childId, specialistId)` in `specialist_links` is unique (FR-M2-08); `tasks.developmentArea` is one of the five areas defined in the SRS.
 ---
 
 ## 4. API / Interfaces
