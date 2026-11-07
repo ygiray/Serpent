@@ -73,8 +73,8 @@ flowchart LR
 | M1 | | FR-M1-01, … |
 | M2 | Frontend: `LinkedSpecialistsPage` (parent), `MyChildrenPage` (specialist). Backend: `routes/links.js`, `services/linkService.js`, shared middleware `requireChildAccess` used by all child endpoints. Table: `specialist_links`. | FR-M2-01 … FR-M2-08 |
 | M3 | | |
-| M4 | | |
-| M5 | | |
+| M4 | Frontend: `TaskForm` for assigning tasks, `ChildTasksPage` for viewing and completing a child's tasks, and `AssignedTasksList` for tracking assigned tasks. Backend: `routes/tasks.js` and `services/taskService.js` handle task validation, status updates, and filtering by assigner. Table: `tasks`. | FR-M4-01 ... FR-M4-08 |
+| M5 | Frontend: `EntryForm` for adding observations and `EntryList` for displaying entries with an "edited" label. Backend: `routes/entries.js` and `services/entryService.js` handle observation records, author permissions, and the `isEdited` flag. Table: `entries`. | FR-M5-01 ... FR-M5-06 |
 | M6 | | |
 | M7 | | |
 | M8 | | |
