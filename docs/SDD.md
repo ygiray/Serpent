@@ -72,12 +72,12 @@ flowchart LR
 |---|---|---|
 | M1 | | FR-M1-01, … |
 | M2 | Frontend: `LinkedSpecialistsPage` (parent), `MyChildrenPage` (specialist). Backend: `routes/links.js`, `services/linkService.js`, shared middleware `requireChildAccess` used by all child endpoints. Table: `specialist_links`. | FR-M2-01 … FR-M2-08 |
-| M3 | | |
+| M3 | Frontend: `WeeklySchedule` component (shared by parent, specialist and child screens), `EventForm`. Backend: `routes/events.js`, `services/eventService.js` (filters events by week, checks that the end time is after the start time). Table: `events`. | FR-M3-01 … FR-M3-07 |
 | M4 | Frontend: `TaskForm` for assigning tasks, `ChildTasksPage` for viewing and completing a child's tasks, and `AssignedTasksList` for tracking assigned tasks. Backend: `routes/tasks.js` and `services/taskService.js` handle task validation, status updates, and filtering by assigner. Table: `tasks`. | FR-M4-01 ... FR-M4-08 |
 | M5 | Frontend: `EntryForm` for adding observations and `EntryList` for displaying entries with an "edited" label. Backend: `routes/entries.js` and `services/entryService.js` handle observation records, author permissions, and the `isEdited` flag. Table: `entries`. | FR-M5-01 ... FR-M5-06 |
 | M6 | | |
 | M7 | | |
-| M8 | | |
+| M8 | Frontend: `AiSummaryCard` ("AI-generated" label, links to source records, "Helpful" / "Incorrect" buttons). Backend: `routes/summaries.js`, `services/summaryService.js` (collects the week's records the user is allowed to see), `ai/index.js` (calls Gemini or returns a mock answer, depending on `AI_MODE`), `ai/prompts.js` (parent and specialist prompts). Table: `ai_summaries`. | FR-M8-01 … FR-M8-09 |
 
 ---
 
@@ -150,11 +150,96 @@ erDiagram
 **Owner:** Rahman (SCRUM-81). Same three flows as SRS Section 4; one sequence diagram each, using the endpoints from Section 4.
 
 ### Flow 1: Login and role-based screens
+```mermaid
+sequenceDiagram
+    actor U as User
+    participant F as React
+    participant B as Express
+    participant D as SQLite
 
+    U->>F: Enter email and password, click "Log in"
+    F->>B: POST /api/auth/login { email, password }
+    B->>D: SELECT user WHERE email = ?
+    D-->>B: User row or nothing
+    alt user exists and password is correct
+        B->>B: Create JWT with userId and role
+        B-->>F: 200 { token, user }
+        F->>F: Save token, pick home screen by role
+        F-->>U: Parent dashboard / Specialist children list / Child "My tasks"
+    else wrong email or password
+        B-->>F: 401 { error: "Invalid email or password" }
+        F-->>U: Show error, stay on login screen
+    end
+```
 ### Flow 2: Parent links and unlinks a specialist; an unlinked specialist is denied access
+```mermaid
+sequenceDiagram
+    actor P as Parent
+    actor S as Specialist
+    participant F as React
+    participant B as Express
+    participant D as SQLite
 
+    P->>F: Enter specialist email and type, click "Link"
+    F->>B: POST /api/children/12/links (Bearer parent JWT)
+    B->>B: Verify JWT, check that parent owns child 12
+    B->>D: SELECT user WHERE email = ? AND role = specialist
+    alt no registered specialist
+        B-->>F: 404 { error }
+        F-->>P: Show "No registered specialist with this email"
+    else specialist found
+        B->>D: INSERT INTO specialist_links
+        B-->>F: 201 { link }
+        F-->>P: Specialist added to linked list
+    end
+
+    P->>F: Click "Unlink" and confirm
+    F->>B: DELETE /api/children/12/links/7
+    B->>D: DELETE FROM specialist_links WHERE id = 7
+    B-->>F: 204 No Content
+    F-->>P: Specialist removed from list
+
+    S->>F: Open child 12 (old token still valid)
+    F->>B: GET /api/children/12/tasks (Bearer specialist JWT)
+    B->>B: Verify JWT (valid)
+    B->>D: SELECT link WHERE childId = 12 AND specialistId = ?
+    D-->>B: No row
+    B-->>F: 403 { error: "No access to this child" }
+    F-->>S: Show access denied, no child data
+```
 ### Flow 3: Specialist assigns a task, the child marks it done, the specialist sees the status
+```mermaid
+sequenceDiagram
+    actor S as Specialist
+    actor C as Child
+    participant F as React
+    participant B as Express
+    participant D as SQLite
 
+    S->>F: Fill in task form, click "Assign"
+    F->>B: POST /api/children/12/tasks { title, description, developmentArea, dueDate }
+    B->>B: Verify JWT, check specialist is linked to child 12, validate fields
+    B->>D: INSERT task (status = pending, assignedBy = specialist)
+    B-->>F: 201 { task }
+    F-->>S: Task shown as pending in "Assigned tasks"
+
+    C->>F: Open "My tasks"
+    F->>B: GET /api/children/12/tasks (Bearer child JWT)
+    B->>D: SELECT tasks WHERE childId = 12
+    B-->>F: 200 [ tasks ]
+    C->>F: Click "Mark as done"
+    F->>B: PATCH /api/children/12/tasks/45 { status: "done" }
+    B->>B: Check that the user is child 12
+    B->>D: UPDATE task SET status = done, completedAt = now
+    B-->>F: 200 { task }
+    F-->>C: Task shown as done
+
+    S->>F: Open "Assigned tasks"
+    F->>B: GET /api/children/12/tasks?assignedBy=me
+    B->>D: SELECT tasks WHERE childId = 12 AND assignedBy = ?
+    B-->>F: 200 [ tasks ]
+    F-->>S: Task shown with status "done"
+```
 ---
 
 ## 6. User Interface
@@ -172,3 +257,4 @@ erDiagram
 | Date | Change | By |
 |---|---|---|
 | 2026-11-06 | First version: skeleton, architecture overview, technology stack, M2 module design | Giray |
+| 2026-11-07 | Sequence diagrams of the three critical flows, M3 and M8 module design | Rahman |
