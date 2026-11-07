@@ -68,7 +68,13 @@ Roles come from the account; a user does not choose a role at login. All data in
 
 | ID | Requirement | Priority |
 |---|---|---|
-| FR-M3-01 | | |
+| FR-M3-01 | The system shall allow a parent or a linked specialist to add an event to a child's schedule with a title, date, start time, end time and an optional description. | Must |
+| FR-M3-02 | The system shall not save an event that has no title or whose end time is not later than its start time, and shall show an error message. | Must |
+| FR-M3-03 | The system shall display the events of a selected week in a weekly view, grouped by day from Monday to Sunday and sorted by start time. | Must |
+| FR-M3-04 | The system shall open the weekly view on the current week and let the user go to the previous or next week. | Should |
+| FR-M3-05 | The system shall show a child their own weekly schedule and upcoming events in read-only mode, without add, edit or delete options. | Must |
+| FR-M3-06 | The system shall allow only the user who created an event to edit or delete it. | Should |
+| FR-M3-07 | The system shall provide a monthly view of the schedule. | Could |
 
 ### M4 – Tasks
 
@@ -131,7 +137,15 @@ Roles come from the account; a user does not choose a role at login. All data in
 
 | ID | Requirement | Priority |
 |---|---|---|
-| FR-M8-01 | | |
+| FR-M8-01 | The system shall allow a parent or a linked specialist to request an AI summary of a child's records for a selected week. | Must |
+| FR-M8-02 | The system shall send to the AI service only the records of the selected week that the requesting user is allowed to see (tasks with their status, events and entries), without names, email addresses or other account data. | Must |
+| FR-M8-03 | The system shall use a different prompt for each reader: everyday, simple language for parents and short, professional language for specialists. | Must |
+| FR-M8-04 | The system shall display every summary with an "AI-generated" label and links to the records the summary is based on. | Must |
+| FR-M8-05 | The prompts shall tell the AI to use only the given records, to state when information is missing, and never to make decisions or suggest a diagnosis or treatment. | Must |
+| FR-M8-06 | The system shall let the reader mark a summary as "helpful" or "incorrect" and shall save this feedback. | Must |
+| FR-M8-07 | The system shall show an error message when the AI service is not available, while all other functions keep working. | Must |
+| FR-M8-08 | The system shall not show AI summaries to a child; summary requests from a child account shall be rejected with HTTP 403. | Must |
+| FR-M8-09 | The system shall suggest new tasks based on the week's records as pending suggestions that a human must accept or reject. | Could |
 
 ---
 
