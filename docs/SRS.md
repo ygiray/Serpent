@@ -116,7 +116,12 @@ Roles come from the account; a user does not choose a role at login. All data in
 
 | ID | Requirement | Priority |
 |---|---|---|
-| FR-M6-01 | | |
+| FR-M6-01 | The system shall allow a parent or a linked specialist to upload a document about a child as a PDF, JPEG or PNG file. | Must |
+| FR-M6-02 | The system shall reject files of unsupported types or files larger than 10 MB and show an error message. | Must |
+| FR-M6-03 | The system shall list the child's documents with file name, file type, uploader and upload date for the parent and linked specialists. | Must |
+| FR-M6-04 | The system shall allow the parent and linked specialists to view a document in the browser and download it. | Must |
+| FR-M6-05 | The system shall not show documents to the child; document requests from a child account shall be rejected with HTTP 403. | Must |
+| FR-M6-06 | The system shall allow the uploader to choose which linked specialists can see a document. | Could |
 
 ### M7 – Weekly Statistics
 
@@ -126,7 +131,11 @@ Roles come from the account; a user does not choose a role at login. All data in
 
 | ID | Requirement | Priority |
 |---|---|---|
-| FR-M7-01 | | |
+| FR-M7-01 | The system shall allow the parent and linked specialists to select a week for the child's statistics; the current week shall be selected by default. | Must |
+| FR-M7-02 | The system shall show the task completion rate for the selected week as a percentage: tasks with a due date in that week and status "done", divided by all tasks with a due date in that week. | Must |
+| FR-M7-03 | The system shall show the completion rate of the selected week separately for each development area that has at least one task in that week. | Must |
+| FR-M7-04 | The system shall show "No tasks this week" instead of a percentage when the selected week has no tasks. | Should |
+| FR-M7-05 | The system shall not show weekly statistics to the child. | Should |
 
 ### M8 – Role-based AI Summary
 
@@ -169,15 +178,53 @@ Roles come from the account; a user does not choose a role at login. All data in
 
 | Flow | Related requirements | Acceptance criteria |
 |---|---|---|
-| Flow 1: Login and role-based screens | FR-M1-… | **Given** … **When** … **Then** … |
-| Flow 2: Parent links and unlinks a specialist; an unlinked specialist is denied access | FR-M2-01, FR-M2-04, FR-M2-05, … | **Given** … **When** … **Then** … |
-| Flow 3: Specialist assigns a task, the child marks it done, the specialist sees the status | FR-M4-… | **Given** … **When** … **Then** … |
+| Flow 1: Login and role-based screens | FR-M1-01, FR-M1-02, FR-M1-03, FR-M1-04, FR-M1-05 | **Given** a seeded parent account and a seeded child account **When** the parent logs in with the correct email and password **Then** the parent's weekly dashboard is shown. **When** the child logs in **Then** only the "My tasks" screen and the child's menu are shown, and opening a parent screen redirects back to "My tasks". **When** a user enters a wrong password **Then** an error message is shown and the user stays on the login screen. |
+| Flow 2: Parent links and unlinks a specialist; an unlinked specialist is denied access | FR-M2-01, FR-M2-02, FR-M2-03, FR-M2-04, FR-M2-05, FR-M2-07 | **Given** a logged-in parent and a registered specialist who is not linked to the child **When** the parent enters the specialist's email and type and saves **Then** the specialist appears in the parent's linked-specialists list and the child appears in the specialist's list of children. **When** the parent enters an unregistered email **Then** an error is shown and no link is created. **When** the parent unlinks the specialist and confirms **Then** the specialist's next request about the child returns HTTP 403 and no child data, although the specialist's token is still valid. |
+| Flow 3: Specialist assigns a task, the child marks it done, the specialist sees the status | FR-M4-01, FR-M4-03, FR-M4-04, FR-M4-05, FR-M4-06 | **Given** a specialist linked to a child **When** the specialist assigns the task "Read for 20 minutes" with development area Language and a due date this week **Then** the child sees the task in "My tasks" with status "pending". **When** the child marks the task as done **Then** the specialist's list of assigned tasks shows the task with status "done". |
 
 ---
 
 ## 5. Use Case Diagram
 
 **Owner:** Rasül (SCRUM-82)
+```mermaid
+flowchart LR
+    Parent[Parent]
+    Specialist[Specialist]
+    Child[Child]
+
+    subgraph Serpent
+        M1([M1: Log in / log out])
+        M2([M2: Link / unlink specialist and view linked children])
+        M3([M3: View weekly schedule and add events])
+        M4([M4: Assign tasks, mark done and view task status])
+        M5([M5: Add / edit specialist entries])
+        M6([M6: Upload / view / download documents])
+        M7([M7: View weekly statistics])
+        M8([M8: Request AI summary])
+    end
+
+    Parent --> M1
+    Parent --> M2
+    Parent --> M3
+    Parent --> M4
+    Parent --> M6
+    Parent --> M7
+    Parent --> M8
+
+    Specialist --> M1
+    Specialist --> M2
+    Specialist --> M3
+    Specialist --> M4
+    Specialist --> M5
+    Specialist --> M6
+    Specialist --> M7
+    Specialist --> M8
+
+    Child --> M1
+    Child --> M3
+    Child --> M4
+```
 
 > Draw it in Mermaid (renders on GitHub). Actors: Parent, Specialist, Child. Show the main use case of each module M1–M8.
 
