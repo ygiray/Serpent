@@ -10,6 +10,14 @@ function openDb(file = process.env.DB_FILE || path.join(__dirname, '..', 'serpen
       name TEXT NOT NULL,
       version TEXT NOT NULL
     );
+        CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY,
+      email TEXT NOT NULL UNIQUE,
+      passwordHash TEXT NOT NULL,
+      name TEXT NOT NULL,
+      role TEXT NOT NULL CHECK (role IN ('parent', 'specialist', 'child')),
+      createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
   `);
   db.prepare(
     "INSERT OR IGNORE INTO app_info (id, name, version) VALUES (1, 'Serpent', '0.0.0')"
