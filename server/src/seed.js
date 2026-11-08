@@ -2,8 +2,7 @@
 const { openDb } = require("./db");
 
 const DEMO_PASSWORD_HASH =
-  "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
-
+  "$2y$10$mhGsStyYlZCBfNK4k4mGLOmfqYXuV4wZeuJVQvtiAp9ZqxHusHWTO";
 function seed() {
   const db = openDb();
 
