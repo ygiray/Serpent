@@ -2,15 +2,7 @@
 
 **Team name:** Serpent (Group 11)  
 **Version:** ☒ First version (Week 6) ☐ Final (Week 10)  
-**Last updated:** 2026-11-06
-
-> **How to fill in this file (delete this note before the final version)**
-> - Each section has an **Owner** line. Edit only your own section, in your own branch (`SCRUM-xx-...`), and open a PR with Giray as reviewer. Deadline: **Saturday 7 November, 20:00**.
-> - Requirement IDs: `FR-M<module>-<two digits>` (e.g. `FR-M1-01`) and `NFR-<two digits>`. Never renumber an ID once it is merged; IDs are used in Jira, commits and tests.
-> - Write each requirement as "The system shall …" and make it testable (someone can write a test that passes or fails).
-> - Priority: **Must** (required for v1.0) / **Should** (planned) / **Could** (bonus, only after all eight modules pass).
-> - Use the same terms everywhere: **Parent**, **Specialist**, **Child**, **linked specialist**, **task**, **event**, **entry** (specialist observation), **document**, **AI summary**.
-> - The "Acceptance level" notes under each module are copied from the assignment; your Must requirements together must cover them.
+**Last updated:** 2026-11-08
 
 ---
 
@@ -27,9 +19,17 @@ Serpent is a web-based decision support platform that brings together the people
 |---|---|
 | Parent | Owns the child's data. Sees all of the child's records, links and unlinks specialists, adds events and tasks, uploads documents and reads the parent version of the AI summary. |
 | Specialist | A teacher, psychologist, doctor, special education teacher or coach. Works only with the children they are currently linked to: adds events, tasks and dated entries, uploads documents and reads the specialist version of the AI summary. |
-| Child | Sees only their own tasks and weekly schedule, and marks their tasks as done. Cannot see specialist entries, documents or AI summaries. |
+| Child | Sees only their own tasks and weekly schedule, and marks their tasks as done. Cannot see specialist entries, documents, statistics or AI summaries. |
 
 Roles come from the account; a user does not choose a role at login. All data in the system is synthetic and created by a seed script.
+
+**Definitions**
+
+- **Week:** Monday 00:00 to Sunday 23:59, identified by the date of its Monday.
+- **Development area:** one of *Language*, *Motor*, *Cognitive*, *Social-emotional*, *Self-care*.
+- **Linked specialist:** a specialist who currently has a link to the child (created by the parent and not removed).
+- **Entry:** a dated observation written by a specialist about a child.
+- **Priority:** **Must** (required for v1.0), **Should** (planned), **Could** (only after all eight modules pass).
 
 ---
 
@@ -51,7 +51,6 @@ Roles come from the account; a user does not choose a role at login. All data in
 | FR-M1-08 | The system shall provide a seed script that creates synthetic demo accounts for each role, a child, links and sample records. | Should |
 | FR-M1-09 | The login screen shall offer demo account buttons that fill in the credentials of a seeded account. | Could |
 
-
 ### M2 – Linking Specialists
 
 **Owner:** Giray (SCRUM-46)
@@ -71,8 +70,6 @@ Roles come from the account; a user does not choose a role at login. All data in
 
 **Owner:** Rahman (SCRUM-80)
 
-> Acceptance level: Parent and linked specialists add events; events are listed in a weekly view. Release: v0.1.
-
 | ID | Requirement | Priority |
 |---|---|---|
 | FR-M3-01 | The system shall allow a parent or a linked specialist to add an event to a child's schedule with a title, date, start time, end time and an optional description. | Must |
@@ -87,39 +84,33 @@ Roles come from the account; a user does not choose a role at login. All data in
 
 **Owner:** Kerem (SCRUM-66)
 
-> Acceptance level: Parent and linked specialists assign tasks; the child marks them done; the assigner sees the status. Release: v0.1.
-
 | ID | Requirement | Priority |
 |---|---|---|
-| FR-M4-01 | A parent or a specialist linked to the child can create a task by entering its title, description, development area, and due date. | Must |
-| FR-M4-02 | The system must display an error and prevent task creation if the title, development area, or due date is missing. | Must |
-| FR-M4-03 | Every newly assigned task starts with a pending status, and the system records who assigned it. | Must |
-| FR-M4-04 | A child can view their own tasks, including the title, description, due date, and current status. | Must |
-| FR-M4-05 | A child can complete their own pending task, and the system records when it was completed. | Must |
-| FR-M4-06 | Parents and linked specialists can check the current status of tasks they assigned to a child. | Must |
-| FR-M4-07 | A parent can view all tasks assigned to their child, regardless of who created them. | Must |
-| FR-M4-08 | As an optional feature, an assigner can set a task to repeat on a regular schedule, such as daily or weekly. | Could |
+| FR-M4-01 | The system shall allow a parent or a linked specialist to assign a task to a child with a title, description, development area and due date. | Must |
+| FR-M4-02 | The system shall reject a task without a title, development area or due date, and show an error message. | Must |
+| FR-M4-03 | The system shall create every new task with the status "pending" and record who assigned it. | Must |
+| FR-M4-04 | The system shall show a child the list of their own tasks with title, description, due date and status. | Must |
+| FR-M4-05 | The system shall allow a child to mark their own pending task as done and shall record the completion time. | Must |
+| FR-M4-06 | The system shall show the assigner (parent or linked specialist) the tasks they assigned to a child, with the current status of each task. | Must |
+| FR-M4-07 | The system shall show a parent all tasks of their child, whoever assigned them. | Must |
+| FR-M4-08 | The system shall allow the assigner to create a recurring task (e.g. daily or weekly). | Could |
 
 ### M5 – Specialist Entries
 
 **Owner:** Kerem (SCRUM-66)
 
-> Acceptance level: Linked specialists add dated observations; edited entries are marked "edited"; the child cannot see them. Release: v0.2.
-
 | ID | Requirement | Priority |
 |---|---|---|
-| FR-M5-01 | A specialist linked to a child can write an observation with a date, text, and an optional development area. | Must |
-| FR-M5-02 | Parents and linked specialists can view the child's observations, ordered from newest to oldest, with the date, author's name, and specialist type. | Must |
-| FR-M5-03 | Only the specialist who created an observation can edit it; editing attempts by other users are denied with HTTP 403. | Must |
-| FR-M5-04 | When an observation is updated, the system displays an edited label and records the time of the most recent change. | Must |
-| FR-M5-05 | Children cannot view specialist observations, and the API denies their requests with HTTP 403. | Must |
-| FR-M5-06 | As an optional feature, the system can store and display the complete edit history of an observation. | Could |
+| FR-M5-01 | The system shall allow a linked specialist to add an entry about a child with a date and text, and an optional development area. | Must |
+| FR-M5-02 | The system shall show the parent and the linked specialists the child's entries, newest first, with date, author name and specialist type. | Must |
+| FR-M5-03 | The system shall allow only the author of an entry to edit it; edit requests from other users shall be rejected with HTTP 403. | Must |
+| FR-M5-04 | The system shall mark an entry that has been changed after creation as "edited", together with the time of the last edit. | Must |
+| FR-M5-05 | The system shall not show entries to the child; entry requests from a child account shall be rejected with HTTP 403. | Must |
+| FR-M5-06 | The system shall keep and show the full edit history of an entry. | Could |
 
 ### M6 – Documents
 
 **Owner:** Rasül (SCRUM-82)
-
-> Acceptance level: Upload, list and download PDF or image files; the child cannot see them. Release: v0.2.
 
 | ID | Requirement | Priority |
 |---|---|---|
@@ -134,8 +125,6 @@ Roles come from the account; a user does not choose a role at login. All data in
 
 **Owner:** Rasül (SCRUM-82)
 
-> Acceptance level: Task completion rate for a selected week, in total and by development area. Release: v0.2.
-
 | ID | Requirement | Priority |
 |---|---|---|
 | FR-M7-01 | The system shall allow the parent and linked specialists to select a week for the child's statistics; the current week shall be selected by default. | Must |
@@ -147,9 +136,6 @@ Roles come from the account; a user does not choose a role at login. All data in
 ### M8 – Role-based AI Summary
 
 **Owner:** Rahman (SCRUM-80)
-
-> Acceptance level: A summary of the week's records, with separate prompts for parent and specialist; labelled "AI-generated" and linked to its source records. Release: v0.2.
-> Remember the safety constraints: the AI never makes decisions or suggests a diagnosis or treatment, receives only data the reader may see, and has a mock mode for tests and CI.
 
 | ID | Requirement | Priority |
 |---|---|---|
@@ -181,7 +167,7 @@ Roles come from the account; a user does not choose a role at login. All data in
 
 ## 4. Critical Flows and Acceptance Criteria
 
-**Owner:** Rasül (SCRUM-82). The three flows below are fixed; Rahman draws the same three flows as sequence diagrams in SDD Section 5. Fill in the related requirement IDs and the Given / When / Then criteria.
+**Owner:** Rasül (SCRUM-82). The same three flows are shown as sequence diagrams in SDD Section 5 and will each have an end-to-end test.
 
 | Flow | Related requirements | Acceptance criteria |
 |---|---|---|
@@ -194,6 +180,7 @@ Roles come from the account; a user does not choose a role at login. All data in
 ## 5. Use Case Diagram
 
 **Owner:** Rasül (SCRUM-82)
+
 ```mermaid
 flowchart LR
     Parent[Parent]
@@ -233,8 +220,6 @@ flowchart LR
     Child --> M4
 ```
 
-> Draw it in Mermaid (renders on GitHub). Actors: Parent, Specialist, Child. Show the main use case of each module M1–M8.
-
 ---
 
 ## 6. Change Log
@@ -242,3 +227,8 @@ flowchart LR
 | Date | Change | By |
 |---|---|---|
 | 2026-11-06 | First version: skeleton, introduction, FR M2, non-functional requirements | Giray |
+| 2026-11-07 | FR M4, M5 | Kerem |
+| 2026-11-07 | FR M3, M8 | Rahman |
+| 2026-11-07 | FR M6, M7, critical flows and acceptance criteria, use case diagram | Rasül |
+| 2026-11-07 | FR M1 | İlker |
+| 2026-11-08 | Consistency review: definitions, unified FR wording, guidance notes removed | Giray |

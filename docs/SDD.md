@@ -2,12 +2,7 @@
 
 **Team name:** Serpent (Group 11)  
 **Version:** ☒ First version (Week 6) ☐ Final (Week 10)  
-**Last updated:** 2026-11-06
-
-> **How to fill in this file (delete this note before the final version)**
-> - Each section has an **Owner** line. Edit only your own section, in your own branch (`SCRUM-xx-...`), and open a PR with Giray as reviewer. Deadline: **Saturday 7 November, 20:00**.
-> - Use the requirement IDs from `docs/SRS.md` (e.g. `FR-M4-02`) and the entity and endpoint conventions in Sections 3 and 4, so that the SRS, ER diagram, API list and sequence diagrams match.
-> - Diagrams are written in Mermaid (renders on GitHub). Images go to `docs/img/`.
+**Last updated:** 2026-11-08
 
 ---
 
@@ -58,6 +53,7 @@ flowchart LR
 | Backend | Node.js 22, Express 5 |
 | Database | SQLite via better-sqlite3; synthetic data from a seed script |
 | Authentication | JWT (jsonwebtoken), passwords hashed with bcrypt (planned, Sprint 2) |
+| File upload | multer; files stored in `server/uploads/`, not committed (planned, Sprint 3) |
 | AI | Gemini API through a single backend module, with a mandatory mock mode |
 | Testing | Jest + Supertest (backend unit and API tests), Vitest + React Testing Library (frontend), Playwright (end-to-end, from Sprint 2) |
 | CI | GitHub Actions: backend tests, frontend tests and build on every push and pull request |
@@ -66,17 +62,17 @@ flowchart LR
 
 ## 2. Module Design
 
-**Owner:** each module owner fills in their own row (same people as the SRS). Name the main frontend pages, backend routes/services and tables.
+**Owner:** each module owner, as in the SRS. The table names the main frontend pages, backend routes and services, and database tables of each module.
 
 | Module | Main components | Implements requirements |
 |---|---|---|
-| M1 | | FR-M1-01, … |
+| M1 | Frontend: `LoginPage`, `AuthContext` (token and current user), `RequireRole` route guard, role-based `NavBar`. Backend: `routes/auth.js` (`login`, `me`), `middleware/authenticate.js`, `services/authService.js` (bcrypt check, JWT signing), `seed.js`. Table: `users`. | FR-M1-01 … FR-M1-09 |
 | M2 | Frontend: `LinkedSpecialistsPage` (parent), `MyChildrenPage` (specialist). Backend: `routes/links.js`, `services/linkService.js`, shared middleware `requireChildAccess` used by all child endpoints. Table: `specialist_links`. | FR-M2-01 … FR-M2-08 |
 | M3 | Frontend: `WeeklySchedule` component (shared by parent, specialist and child screens), `EventForm`. Backend: `routes/events.js`, `services/eventService.js` (filters events by week, checks that the end time is after the start time). Table: `events`. | FR-M3-01 … FR-M3-07 |
-| M4 | Frontend: `TaskForm` for assigning tasks, `ChildTasksPage` for viewing and completing a child's tasks, and `AssignedTasksList` for tracking assigned tasks. Backend: `routes/tasks.js` and `services/taskService.js` handle task validation, status updates, and filtering by assigner. Table: `tasks`. | FR-M4-01 ... FR-M4-08 |
-| M5 | Frontend: `EntryForm` for adding observations and `EntryList` for displaying entries with an "edited" label. Backend: `routes/entries.js` and `services/entryService.js` handle observation records, author permissions, and the `isEdited` flag. Table: `entries`. | FR-M5-01 ... FR-M5-06 |
-| M6 | | |
-| M7 | | |
+| M4 | Frontend: `TaskForm` for assigning tasks, `ChildTasksPage` for viewing and completing a child's tasks, and `AssignedTasksList` for tracking assigned tasks. Backend: `routes/tasks.js` and `services/taskService.js` handle task validation, status updates, and filtering by assigner. Table: `tasks`. | FR-M4-01 … FR-M4-08 |
+| M5 | Frontend: `EntryForm` for adding observations and `EntryList` for displaying entries with an "edited" label. Backend: `routes/entries.js` and `services/entryService.js` handle observation records, author permissions, and the `isEdited` flag. Table: `entries`. | FR-M5-01 … FR-M5-06 |
+| M6 | Frontend: `DocumentsPage` (upload form + list with view/download). Backend: `routes/documents.js` with multer (file type and size check), `services/documentService.js`, files stored in `server/uploads/` (not committed). Table: `documents`. | FR-M6-01 … FR-M6-06 |
+| M7 | Frontend: `WeeklyStatsPanel` (week picker, total completion rate, rate per development area). Backend: `routes/stats.js`, `services/statsService.js` (one SQL query grouped by `developmentArea` over `tasks`). No own table. | FR-M7-01 … FR-M7-05 |
 | M8 | Frontend: `AiSummaryCard` ("AI-generated" label, links to source records, "Helpful" / "Incorrect" buttons). Backend: `routes/summaries.js`, `services/summaryService.js` (collects the week's records the user is allowed to see), `ai/index.js` (calls Gemini or returns a mock answer, depending on `AI_MODE`), `ai/prompts.js` (parent and specialist prompts). Table: `ai_summaries`. | FR-M8-01 … FR-M8-09 |
 
 ---
@@ -181,19 +177,15 @@ erDiagram
     }
 ```
 
-Constraints: `users.email` is unique; `(childId, specialistId)` in `specialist_links` is unique (FR-M2-08); `tasks.developmentArea` is one of the five areas defined in the SRS.
+Constraints: `users.email` is unique; `(childId, specialistId)` in `specialist_links` is unique (FR-M2-08); `tasks.developmentArea` is one of the five development areas defined in the SRS (Section 1).
+
 ---
 
 ## 4. API / Interfaces
 
 **Owner:** Kerem (SCRUM-67)
 
-> Conventions (use them so the API matches the ER diagram and the sequence diagrams):
-> - Base path `/api`. Login: `POST /api/auth/login`. Everything about a child is under `/api/children/:childId/...` (e.g. `GET /api/children/:childId/tasks`).
-> - JSON field names in camelCase (`childId`, `developmentArea`, `dueDate`).
-> - The JWT is sent as `Authorization: Bearer <token>`.
-> - Errors return `{ "error": "message" }` with 400 (invalid data), 401 (no or invalid token), 403 (no access to this child), 404 (not found).
-> - **Please add the endpoints of the three critical flows first (by Saturday 12:00):** Rahman needs them for the sequence diagrams.
+Conventions: base path `/api`; everything about a child is under `/api/children/:childId/...` and goes through the `requireChildAccess` middleware; JSON field names in camelCase; the JWT is sent as `Authorization: Bearer <token>`; errors return `{ "error": "message" }` with 400 (invalid data), 401 (no or invalid token), 403 (no access to this child or action) or 404 (not found); `week` parameters are the date of the week's Monday (`YYYY-MM-DD`).
 
 | Method | Endpoint | Description | Module |
 |---|---|---|---|
@@ -201,26 +193,26 @@ Constraints: `users.email` is unique; `(childId, specialistId)` in `specialist_l
 | POST | `/api/auth/login` | Accepts email and password; returns a token and user information including role | M1 |
 | GET | `/api/auth/me` | Returns the authenticated user's information using the token | M1 |
 | GET | `/api/children` | Lists children accessible to the signed-in user according to their role | M1, M2 |
-| GET | `/api/children/:childId/links` | Shows specialists currently linked to the child; accessible to the parent | M2 |
-| POST | `/api/children/:childId/links` | Allows the parent to link a registered specialist using email and specialistType | M2 |
-| DELETE | `/api/children/:childId/links/:linkId` | Removes a specialist's link to the child so access is no longer permitted | M2 |
-| GET | `/api/children/:childId/tasks?week=&assignedBy=me` | Retrieves the child's tasks, with optional filters for week and tasks assigned by the current user | M4 |
-| POST | `/api/children/:childId/tasks` | Allows a parent or linked specialist to assign a task to the child | M4 |
-| PATCH | `/api/children/:childId/tasks/:taskId` | Lets the child mark their own task as done and updates its completion status | M4 |
-| GET | `/api/children/:childId/entries` | Lists dated specialist observations for authorized parents and linked specialists; children cannot access them | M5 |
-| POST | `/api/children/:childId/entries` | Allows a linked specialist to add a dated observation for the child | M5 |
-| PATCH | `/api/children/:childId/entries/:entryId` | Updates a specialist observation and marks the entry as edited | M5 |
+| GET | `/api/children/:childId/links` | Shows specialists currently linked to the child (parent only) | M2 |
+| POST | `/api/children/:childId/links` | Links a registered specialist with `{ email, specialistType }` (parent only); 404 for an unregistered email | M2 |
+| DELETE | `/api/children/:childId/links/:linkId` | Removes a specialist's link to the child so access ends immediately (parent only) | M2 |
 | GET | `/api/children/:childId/events?week=` | Returns the child's events for the requested week | M3 |
 | POST | `/api/children/:childId/events` | Allows a parent or linked specialist to create a schedule event | M3 |
-| PATCH | `/api/children/:childId/events/:eventId` | Updates an existing event when the user has permission | M3 |
-| DELETE | `/api/children/:childId/events/:eventId` | Deletes an event when the user has permission | M3 |
+| PATCH | `/api/children/:childId/events/:eventId` | Updates an event (creator only) | M3 |
+| DELETE | `/api/children/:childId/events/:eventId` | Deletes an event (creator only) | M3 |
+| GET | `/api/children/:childId/tasks?week=&assignedBy=me` | Retrieves the child's tasks, with optional filters for week and tasks assigned by the current user | M4 |
+| POST | `/api/children/:childId/tasks` | Allows a parent or linked specialist to assign a task to the child | M4 |
+| PATCH | `/api/children/:childId/tasks/:taskId` | Marks a task as done with `{ status: "done" }` and records the completion time (the child only) | M4 |
+| GET | `/api/children/:childId/entries` | Lists dated specialist observations for authorized parents and linked specialists; children cannot access them | M5 |
+| POST | `/api/children/:childId/entries` | Allows a linked specialist to add a dated observation for the child | M5 |
+| PATCH | `/api/children/:childId/entries/:entryId` | Updates an entry and marks it as edited (author only) | M5 |
 | GET | `/api/children/:childId/documents` | Lists documents available to authorized users; children cannot access them | M6 |
-| POST | `/api/children/:childId/documents` | Uploads a PDF or image document for the child | M6 |
+| POST | `/api/children/:childId/documents` | Uploads a PDF, JPEG or PNG file of at most 10 MB (`multipart/form-data`) | M6 |
 | GET | `/api/children/:childId/documents/:documentId/file` | Returns a document file for viewing or downloading by an authorized user | M6 |
 | GET | `/api/children/:childId/stats?week=` | Returns the selected week's task completion rate, overall and grouped by development area | M7 |
-| POST | `/api/children/:childId/summaries` | Generates an AI summary of the child's records using the requesting user's role | M8 |
+| POST | `/api/children/:childId/summaries` | Generates an AI summary for `{ weekStart }` with the prompt of the requesting user's role (not the child) | M8 |
 | GET | `/api/children/:childId/summaries/:summaryId` | Returns an AI-generated summary with its source records and label | M8 |
-| PATCH | `/api/children/:childId/summaries/:summaryId` | Updates the feedback recorded for an AI-generated summary | M8 |
+| PATCH | `/api/children/:childId/summaries/:summaryId` | Saves feedback `{ feedback: "helpful" \| "incorrect" }` for a summary | M8 |
 
 ---
 
@@ -229,6 +221,7 @@ Constraints: `users.email` is unique; `(childId, specialistId)` in `specialist_l
 **Owner:** Rahman (SCRUM-81). Same three flows as SRS Section 4; one sequence diagram each, using the endpoints from Section 4.
 
 ### Flow 1: Login and role-based screens
+
 ```mermaid
 sequenceDiagram
     actor U as User
@@ -250,7 +243,9 @@ sequenceDiagram
         F-->>U: Show error, stay on login screen
     end
 ```
+
 ### Flow 2: Parent links and unlinks a specialist; an unlinked specialist is denied access
+
 ```mermaid
 sequenceDiagram
     actor P as Parent
@@ -286,7 +281,9 @@ sequenceDiagram
     B-->>F: 403 { error: "No access to this child" }
     F-->>S: Show access denied, no child data
 ```
+
 ### Flow 3: Specialist assigns a task, the child marks it done, the specialist sees the status
+
 ```mermaid
 sequenceDiagram
     actor S as Specialist
@@ -319,21 +316,25 @@ sequenceDiagram
     B-->>F: 200 [ tasks ]
     F-->>S: Task shown with status "done"
 ```
+
 ---
 
 ## 6. User Interface
 
-**Owner:** Rasül (SCRUM-83). Save images in `docs/img/` (hand-drawn wireframes are fine).
+**Owner:** Rasül (SCRUM-83). Wireframes of the main screens; the image files are in `docs/img/`.
 
 | Screen | Image | Module |
 |---|---|---|
-| Login: email, password, "Log in" button, error message area | `docs/img/login.png` | M1 |
-| Parent – weekly dashboard: weekly schedule, task list with "Assign task", recent specialist entries, weekly statistics, AI summary card | `docs/img/parent-dashboard.png` | M3, M4, M5, M7, M8 |
-| Child – my tasks: task list with "Mark as done", upcoming events | `docs/img/child-tasks.png` | M1, M3, M4 |
-| Specialist – child profile and new entry: linked children list, entry form, entries with "edited" badge, AI summary | `docs/img/specialist-child.png` | M2, M5, M8 |
-| Specialist – assigning and tracking tasks: task form, assigned tasks with status | `docs/img/specialist-tasks.png` | M4 |
-| Parent – linked specialists: email + type form, list, "Unlink" with confirmation | `docs/img/linked-specialists.png` | M2 |
-| Parent – documents: upload form, list (name, type, uploader, date), view/download | `docs/img/documents.png` | M6 |
+| Login: email, password, "Log in" button, error message area | [login.png](img/login.png) | M1 |
+| Parent – weekly dashboard: weekly schedule, task list with "Assign task", recent specialist entries, weekly statistics, AI summary card | [parent-dashboard.png](img/parent-dashboard.png) | M3, M4, M5, M7, M8 |
+| Child – my tasks: task list with "Mark as done", upcoming events | [child-tasks.png](img/child-tasks.png) | M1, M3, M4 |
+| Specialist – child profile and new entry: linked children list, entry form, entries with "edited" badge, AI summary | [specialist-child.png](img/specialist-child.png) | M2, M5, M8 |
+| Specialist – assigning and tracking tasks: task form, assigned tasks with status | [specialist-tasks.png](img/specialist-tasks.png) | M4 |
+| Parent – linked specialists: email + type form, list, "Unlink" with confirmation | [linked-specialists.png](img/linked-specialists.png) | M2 |
+| Parent – documents: upload form, list (name, type, uploader, date), view/download | [documents.png](img/documents.png) | M6 |
+
+The wireframes show the intended layout. Where a wireframe differs from the SRS, the SRS applies: the child's menu has no Documents item (FR-M6-05); only PDF, JPEG and PNG files of at most 10 MB are accepted (FR-M6-02); tasks have only the statuses "pending" and "done" and no priority field (FR-M4-03). The images will be updated for the final version (Week 10).
+
 ---
 
 ## 7. Change Log
@@ -341,4 +342,8 @@ sequenceDiagram
 | Date | Change | By |
 |---|---|---|
 | 2026-11-06 | First version: skeleton, architecture overview, technology stack, M2 module design | Giray |
+| 2026-11-07 | API endpoint list, M4 and M5 module design | Kerem |
 | 2026-11-07 | Sequence diagrams of the three critical flows, M3 and M8 module design | Rahman |
+| 2026-11-07 | UI wireframes | Rasül |
+| 2026-11-07 | Data model (ER diagram) | İlker |
+| 2026-11-08 | Consistency review: M1, M6 and M7 module design, API list ordered by module, wireframe notes, guidance notes removed | Giray |
