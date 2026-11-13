@@ -4,10 +4,11 @@
   "private": true,
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "node --watch src/index.js",
-    "test": "jest --coverage"
-  },
+  "start": "node src/index.js",
+  "dev": "node --watch src/index.js",
+  "seed": "node src/seed.js",
+  "test": "jest --coverage"
+},
   "jest": {
     "testEnvironment": "node",
     "testPathIgnorePatterns": ["/node_modules/", "helpers.js"]
