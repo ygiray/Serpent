@@ -7,28 +7,96 @@ module.exports = {
   createRouter(db) {
     const router = express.Router({ mergeParams: true });
 
-    // GET /api/children/:childId/tasks
-    router.get('/', (req, res) => {
+    function getChild(req, res) {
       const childId = Number(req.params.childId);
 
       if (!Number.isInteger(childId) || childId <= 0) {
-        return res.status(400).json({ error: 'Invalid childId' });
+        res.status(400).json({ error: 'Invalid childId' });
+        return null;
       }
 
+      const child = db.prepare(
+        'SELECT * FROM children WHERE id = ?'
+      ).get(childId);
+
+      if (!child) {
+        res.status(404).json({ error: 'Child not found' });
+        return null;
+      }
+
+      return child;
+    }
+
+    function hasAccess(user, child) {
+      if (user.role === 'parent') {
+        return child.parentId === user.id;
+      }
+
+      if (user.role === 'child') {
+        return child.userId === user.id;
+      }
+
+      if (user.role === 'specialist') {
+        const link = db.prepare(`
+          SELECT id
+          FROM specialist_links
+          WHERE childId = ? AND specialistId = ?
+        `).get(child.id, user.id);
+
+        return Boolean(link);
+      }
+
+      return false;
+    }
+
+    // Authentication and child access checks.
+    router.use((req, res, next) => {
+      if (!req.user || !req.user.id) {
+        return res.status(401).json({
+          error: 'Authentication required'
+        });
+      }
+
+      const child = getChild(req, res);
+      if (!child) return;
+
+      if (!hasAccess(req.user, child)) {
+        return res.status(403).json({
+          error: 'Access denied'
+        });
+      }
+
+      req.childRecord = child;
+      next();
+    });
+
+    // GET /api/children/:childId/tasks
+    router.get('/', (req, res) => {
       const { week, assignedBy } = req.query;
+
       let sql = 'SELECT * FROM tasks WHERE childId = ?';
-      const params = [childId];
+      const params = [req.childRecord.id];
 
       if (week !== undefined) {
         if (
           typeof week !== 'string' ||
-          !/^\d{4}-\d{2}-\d{2}$/.test(week) ||
-          !Number.isFinite(Date.parse(week))
+          !/^\d{4}-\d{2}-\d{2}$/.test(week)
         ) {
-          return res.status(400).json({ error: 'Invalid week' });
+          return res.status(400).json({
+            error: 'Invalid week'
+          });
         }
 
         const start = new Date(`${week}T00:00:00Z`);
+
+        if (
+          !Number.isFinite(start.getTime()) ||
+          start.toISOString().slice(0, 10) !== week
+        ) {
+          return res.status(400).json({
+            error: 'Invalid week'
+          });
+        }
 
         if (start.getUTCDay() !== 1) {
           return res.status(400).json({
@@ -41,22 +109,15 @@ module.exports = {
 
         sql += ' AND dueDate >= ? AND dueDate < ?';
         params.push(
-          start.toISOString().slice(0, 10),
+          week,
           end.toISOString().slice(0, 10)
         );
       }
 
       if (assignedBy !== undefined) {
-        // "me" requires an authenticated user.
         if (assignedBy !== 'me') {
           return res.status(400).json({
             error: 'Invalid assignedBy filter'
-          });
-        }
-
-        if (!req.user || !req.user.id) {
-          return res.status(401).json({
-            error: 'Authentication required'
           });
         }
 
@@ -72,7 +133,12 @@ module.exports = {
 
     // POST /api/children/:childId/tasks
     router.post('/', (req, res) => {
-      const childId = Number(req.params.childId);
+      if (!['parent', 'specialist'].includes(req.user.role)) {
+        return res.status(403).json({
+          error: 'Only parents and specialists can assign tasks'
+        });
+      }
+
       const {
         title,
         description,
@@ -80,33 +146,27 @@ module.exports = {
         dueDate
       } = req.body || {};
 
-      if (!Number.isInteger(childId) || childId <= 0) {
-        return res.status(400).json({ error: 'Invalid childId' });
-      }
-
-      if (!req.user || !req.user.id) {
-        return res.status(401).json({
-          error: 'Authentication required'
-        });
-      }
-
-      if (!['parent', 'specialist'].includes(req.user.role)) {
-        return res.status(403).json({
-          error: 'Only parents and specialists can assign tasks'
-        });
-      }
-
       if (
         typeof title !== 'string' ||
         !title.trim() ||
         typeof developmentArea !== 'string' ||
         !developmentArea.trim() ||
         typeof dueDate !== 'string' ||
-        !/^\d{4}-\d{2}-\d{2}$/.test(dueDate) ||
-        !Number.isFinite(Date.parse(dueDate))
+        !/^\d{4}-\d{2}-\d{2}$/.test(dueDate)
       ) {
         return res.status(400).json({
           error: 'Invalid task data'
+        });
+      }
+
+      const parsedDate = new Date(`${dueDate}T00:00:00Z`);
+
+      if (
+        !Number.isFinite(parsedDate.getTime()) ||
+        parsedDate.toISOString().slice(0, 10) !== dueDate
+      ) {
+        return res.status(400).json({
+          error: 'Invalid dueDate'
         });
       }
 
@@ -131,7 +191,7 @@ module.exports = {
         )
         VALUES (?, ?, ?, ?, ?, ?)
       `).run(
-        childId,
+        req.childRecord.id,
         req.user.id,
         title.trim(),
         description ?? null,
@@ -148,33 +208,17 @@ module.exports = {
 
     // PATCH /api/children/:childId/tasks/:taskId
     router.patch('/:taskId', (req, res) => {
-      const childId = Number(req.params.childId);
       const taskId = Number(req.params.taskId);
 
-      if (
-        !Number.isInteger(childId) ||
-        childId <= 0 ||
-        !Number.isInteger(taskId) ||
-        taskId <= 0
-      ) {
+      if (!Number.isInteger(taskId) || taskId <= 0) {
         return res.status(400).json({
-          error: 'Invalid task ID'
+          error: 'Invalid taskId'
         });
       }
 
-      if (!req.user || !req.user.id) {
-        return res.status(401).json({
-          error: 'Authentication required'
-        });
-      }
-
-      const task = db.prepare(
-        'SELECT * FROM tasks WHERE id = ? AND childId = ?'
-      ).get(taskId, childId);
-
-      if (!task) {
-        return res.status(404).json({
-          error: 'Task not found'
+      if (req.user.role !== 'child') {
+        return res.status(403).json({
+          error: 'Only a child can complete a task'
         });
       }
 
@@ -188,15 +232,14 @@ module.exports = {
         });
       }
 
-      if (req.user.role !== 'child') {
-        return res.status(403).json({
-          error: 'Only a child can complete a task'
-        });
-      }
+      const task = db.prepare(`
+        SELECT * FROM tasks
+        WHERE id = ? AND childId = ?
+      `).get(taskId, req.childRecord.id);
 
-      if (req.user.id !== childId) {
-        return res.status(403).json({
-          error: 'Cannot complete another child’s task'
+      if (!task) {
+        return res.status(404).json({
+          error: 'Task not found'
         });
       }
 
@@ -205,7 +248,7 @@ module.exports = {
         SET status = 'done',
             completedAt = CURRENT_TIMESTAMP
         WHERE id = ? AND childId = ?
-      `).run(taskId, childId);
+      `).run(taskId, req.childRecord.id);
 
       const updatedTask = db.prepare(
         'SELECT * FROM tasks WHERE id = ?'
