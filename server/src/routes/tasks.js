@@ -1,6 +1,14 @@
 
 const express = require('express');
 
+const AREAS = [
+  'language',
+  'motor',
+  'cognitive',
+  'social_emotional',
+  'self_care'
+];
+
 module.exports = {
   path: '/api/children/:childId/tasks',
 
@@ -49,7 +57,6 @@ module.exports = {
       return false;
     }
 
-    // Authentication and child access checks.
     router.use((req, res, next) => {
       if (!req.user || !req.user.id) {
         return res.status(401).json({
@@ -70,7 +77,7 @@ module.exports = {
       next();
     });
 
-    // GET /api/children/:childId/tasks
+    // List tasks, optionally filtered by week and assigner.
     router.get('/', (req, res) => {
       const { week, assignedBy } = req.query;
 
@@ -131,7 +138,7 @@ module.exports = {
       return res.json(tasks);
     });
 
-    // POST /api/children/:childId/tasks
+    // Assign a task (parent or linked specialist).
     router.post('/', (req, res) => {
       if (!['parent', 'specialist'].includes(req.user.role)) {
         return res.status(403).json({
@@ -150,7 +157,7 @@ module.exports = {
         typeof title !== 'string' ||
         !title.trim() ||
         typeof developmentArea !== 'string' ||
-        !developmentArea.trim() ||
+        !AREAS.includes(developmentArea) ||
         typeof dueDate !== 'string' ||
         !/^\d{4}-\d{2}-\d{2}$/.test(dueDate)
       ) {
@@ -195,7 +202,7 @@ module.exports = {
         req.user.id,
         title.trim(),
         description ?? null,
-        developmentArea.trim(),
+        developmentArea,
         dueDate
       );
 
@@ -206,7 +213,7 @@ module.exports = {
       return res.status(201).json(task);
     });
 
-    // PATCH /api/children/:childId/tasks/:taskId
+    // Mark a task as completed (child only).
     router.patch('/:taskId', (req, res) => {
       const taskId = Number(req.params.taskId);
 
