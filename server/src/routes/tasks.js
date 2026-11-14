@@ -1,5 +1,6 @@
 
 const express = require('express');
+const { authenticate } = require('../middleware/auth');
 
 const AREAS = [
   'language',
@@ -57,13 +58,10 @@ module.exports = {
       return false;
     }
 
-    router.use((req, res, next) => {
-      if (!req.user || !req.user.id) {
-        return res.status(401).json({
-          error: 'Authentication required'
-        });
-      }
+    // Authenticate JWT before checking child access.
+    router.use(authenticate);
 
+    router.use((req, res, next) => {
       const child = getChild(req, res);
       if (!child) return;
 
