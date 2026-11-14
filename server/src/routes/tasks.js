@@ -248,6 +248,11 @@ module.exports = {
         });
       }
 
+      // Already completed: preserve the original completion time.
+      if (task.status === 'done') {
+        return res.json(task);
+      }
+
       db.prepare(`
         UPDATE tasks
         SET status = 'done',
