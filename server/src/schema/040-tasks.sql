@@ -9,7 +9,10 @@ CREATE TABLE IF NOT EXISTS tasks (
     status TEXT NOT NULL DEFAULT 'pending'
         CHECK (status IN ('pending', 'done')),
     completedAt TEXT,
-    createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (childId) REFERENCES children(id),
+    FOREIGN KEY (assignedBy) REFERENCES users(id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_tasks_childId
