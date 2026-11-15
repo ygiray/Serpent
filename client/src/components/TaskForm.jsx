@@ -11,13 +11,20 @@ const DEVELOPMENT_AREAS = [
 
 const VALID_AREAS = DEVELOPMENT_AREAS.map((area) => area.value);
 
-function isValidDate(value) {
+export function isValidDate(value) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     return false;
   }
 
   const [year, month, day] = value.split('-').map(Number);
-  const date = new Date(Date.UTC(year, month - 1, day));
+
+  if (year < 1 || year > 9999) {
+    return false;
+  }
+
+  const date = new Date(0);
+  date.setUTCHours(0, 0, 0, 0);
+  date.setUTCFullYear(year, month - 1, day);
 
   return (
     date.getUTCFullYear() === year &&
@@ -126,7 +133,7 @@ export default function TaskForm({ childId, token, onTaskCreated }) {
       try {
         data = await response.json();
       } catch {
-        // Some server errors return an empty or non-JSON response.
+        // The server may return an empty or non-JSON response.
       }
 
       if (!response.ok) {
@@ -140,7 +147,7 @@ export default function TaskForm({ childId, token, onTaskCreated }) {
         throw new Error(getErrorMessage(response.status, serverMessage));
       }
 
-      if (!data || typeof data !== 'object') {
+      if (!data || typeof data !== 'object' || Array.isArray(data)) {
         throw new Error(
           'The server returned an unexpected response. Please check the task list before trying again.'
         );
@@ -206,9 +213,7 @@ export default function TaskForm({ childId, token, onTaskCreated }) {
     >
       <h2>Assign Task</h2>
 
-      <p>
-        Fields marked with * are required.
-      </p>
+      <p>Fields marked with * are required.</p>
 
       <div style={groupStyle}>
         <label htmlFor="task-title" style={labelStyle}>
