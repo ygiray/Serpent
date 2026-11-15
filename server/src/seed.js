@@ -1,55 +1,38 @@
+const bcrypt = require('bcryptjs');
+const { openDb } = require('./db');
 
-const { openDb } = require("./db");
+const db = openDb();
+const hash = bcrypt.hashSync('password', 10);
 
-const DEMO_PASSWORD_HASH =
-  "$2y$10$mhGsStyYlZCBfNK4k4mGLOmfqYXuV4wZeuJVQvtiAp9ZqxHusHWTO";
-function seed() {
-  const db = openDb();
+const addUser = db.prepare(
+  'INSERT OR IGNORE INTO users (email, passwordHash, name, role) VALUES (?, ?, ?, ?)'
+);
 
-  const insertUser = db.prepare(`
-    INSERT OR IGNORE INTO users (email, passwordHash, name, role)
-    VALUES (?, ?, ?, ?)
-  `);
+const idOf = (email) =>
+  db.prepare('SELECT id FROM users WHERE email = ?').get(email).id;
 
-  const users = [
-    {
-      email: "parent@serpent.test",
-      name: "Demo Parent",
-      role: "parent",
-    },
-    {
-      email: "specialist@serpent.test",
-      name: "Demo Specialist",
-      role: "specialist",
-    },
-    {
-      email: "child@serpent.test",
-      name: "Demo Child",
-      role: "child",
-    },
-  ];
+db.transaction(() => {
+  addUser.run('parent@serpent.test', hash, 'Ayşe Demo', 'parent');
+  addUser.run('teacher@serpent.test', hash, 'Mehmet Teacher', 'specialist');
+  addUser.run(
+    'psychologist@serpent.test',
+    hash,
+    'Zeynep Psychologist',
+    'specialist'
+  );
+  addUser.run('child@serpent.test', hash, 'Can Demo', 'child');
 
-  const insertMany = db.transaction((items) => {
-    for (const user of items) {
-      insertUser.run(
-        user.email,
-        DEMO_PASSWORD_HASH,
-        user.name,
-        user.role
-      );
-    }
-  });
+  db.prepare(`
+    INSERT OR IGNORE INTO children
+      (id, parentId, userId, name, birthDate)
+    VALUES (1, ?, ?, ?, ?)
+  `).run(
+    idOf('parent@serpent.test'),
+    idOf('child@serpent.test'),
+    'Can Demo',
+    '2016-04-12'
+  );
+})();
 
-  insertMany(users);
-
-  console.log("Seed completed.");
-  console.log("Demo users:");
-  console.log("  parent@serpent.test");
-  console.log("  specialist@serpent.test");
-  console.log("  child@serpent.test");
-  console.log("Demo password: password");
-
-  db.close();
-}
-
-seed();
+console.log('Seed completed. Password for all demo users: password');
+db.close();
