@@ -7,7 +7,7 @@ import {
   screen,
   waitFor
 } from '@testing-library/react';
-import TaskForm from './TaskForm';
+import TaskForm, { isValidDate } from './TaskForm';
 
 afterEach(() => {
   cleanup();
@@ -178,37 +178,21 @@ describe('TaskForm', () => {
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
- 
-  it('rejects an impossible due date', async () => {
-    const mockFetch = vi.fn();
-    vi.stubGlobal('fetch', mockFetch);
-
-    render(<TaskForm childId={5} token="test-token" />);
-
-    fillForm();
-
-    const dateInput = screen.getByLabelText('Due Date *');
-
-    // Simulate an invalid calendar date that should not be sent.
-    Object.defineProperty(dateInput, 'value', {
-      configurable: true,
-      get: () => '2026-02-30'
-    });
-
-    const form = screen
-      .getByRole('button', { name: 'Assign Task' })
-      .closest('form');
-
-    fireEvent.submit(form);
-
-    expect(await screen.findByRole('alert')).toHaveProperty(
-      'textContent',
-      'Please enter a valid due date.'
-    );
-
-    expect(mockFetch).not.toHaveBeenCalled();
+  it('rejects impossible calendar dates', () => {
+    expect(isValidDate('2026-02-30')).toBe(false);
+    expect(isValidDate('2026-02-29')).toBe(false);
+    expect(isValidDate('2026-13-01')).toBe(false);
+    expect(isValidDate('2026-00-10')).toBe(false);
+    expect(isValidDate('not-a-date')).toBe(false);
+    expect(isValidDate('')).toBe(false);
+    expect(isValidDate('0000-01-01')).toBe(false);
   });
 
+  it('accepts valid calendar dates', () => {
+    expect(isValidDate('2026-12-01')).toBe(true);
+    expect(isValidDate('2028-02-29')).toBe(true);
+    expect(isValidDate('2026-02-28')).toBe(true);
+  });
 
   it('shows an expired session message for HTTP 401', async () => {
     const mockFetch = vi.fn().mockResolvedValue({
