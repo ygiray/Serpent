@@ -178,6 +178,7 @@ describe('TaskForm', () => {
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
+ 
   it('rejects an impossible due date', async () => {
     const mockFetch = vi.fn();
     vi.stubGlobal('fetch', mockFetch);
@@ -186,21 +187,28 @@ describe('TaskForm', () => {
 
     fillForm();
 
-    const form = screen.getByRole('button', {
-      name: 'Assign Task'
-    }).closest('form');
+    const dateInput = screen.getByLabelText('Due Date *');
 
-    fireEvent.submit(form, {
-      preventDefault: () => {}
+    // Simulate an invalid calendar date that should not be sent.
+    Object.defineProperty(dateInput, 'value', {
+      configurable: true,
+      get: () => '2026-02-30'
     });
 
-    await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledTimes(1);
-    });
+    const form = screen
+      .getByRole('button', { name: 'Assign Task' })
+      .closest('form');
 
-    // Valid dates are accepted; impossible dates are also checked
-    // by the component's isValidDate helper.
+    fireEvent.submit(form);
+
+    expect(await screen.findByRole('alert')).toHaveProperty(
+      'textContent',
+      'Please enter a valid due date.'
+    );
+
+    expect(mockFetch).not.toHaveBeenCalled();
   });
+
 
   it('shows an expired session message for HTTP 401', async () => {
     const mockFetch = vi.fn().mockResolvedValue({
