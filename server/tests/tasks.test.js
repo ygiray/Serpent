@@ -16,10 +16,16 @@ function setup() {
   insertUser.run(2, 'child@test.local', 'Child', 'child');
   insertUser.run(3, 'specialist@test.local', 'Specialist', 'specialist');
   insertUser.run(4, 'other@test.local', 'Other Parent', 'parent');
+  insertUser.run(5, 'other-child@test.local', 'Other Child', 'child');
 
   db.prepare(`
     INSERT INTO children (id, parentId, userId, name)
     VALUES (10, 1, 2, 'Test Child')
+  `).run();
+
+  db.prepare(`
+    INSERT INTO children (id, parentId, userId, name)
+    VALUES (11, 4, 5, 'Other Child')
   `).run();
 
   db.prepare(`
@@ -111,6 +117,26 @@ describe('SCRUM-68 Tasks API', () => {
     expect(res.status).toBe(400);
   });
 
+  test('rejects an invalid development area', async () => {
+    const res = await asUser(app, 'post', baseUrl, 1, 'parent')
+      .send({
+        title: 'Math practice',
+        developmentArea: 'math',
+        dueDate: '2026-12-01'
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('error');
+  });
+
+  test('rejects access to another child', async () => {
+    const res = await asUser(
+      app, 'get', '/api/children/11/tasks', 1, 'parent'
+    );
+
+    expect(res.status).toBe(403);
+  });
+
   test('lists tasks filtered by assignedBy=me', async () => {
     db.prepare(`
       INSERT INTO tasks
@@ -197,5 +223,19 @@ describe('SCRUM-68 Tasks API', () => {
     ).send({ status: 'done' });
 
     expect(res.status).toBe(403);
+  });
+
+  test('prevents a child completing another child task', async () => {
+    const result = db.prepare(`
+      INSERT INTO tasks
+        (childId, assignedBy, title, developmentArea, dueDate)
+      VALUES (11, 4, 'Other child task', 'language', '2026-12-01')
+    `).run();
+
+    const res = await asUser(
+      app, 'patch', `${baseUrl}/${result.lastInsertRowid}`, 2, 'child'
+    ).send({ status: 'done' });
+
+    expect(res.status).toBe(404);
   });
 });
