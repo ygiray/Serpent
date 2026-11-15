@@ -82,7 +82,8 @@ Two-week sprints aligned with the course schedule.
 
 **Jira board screenshot:**
 
-![Jira board, Sprint 2, 2026-11-15](img/pmp3-jira-board.png)
+![Jira board, Sprint 2, 2026-11-15 (1/2)](img/pmp3-jira-board_1_.png)
+![Jira board, Sprint 2, 2026-11-15 (2/2)](img/pmp3-jira-board_2_.png)
 
 **Sprint 2 in numbers:** 23 tasks – 9 Done, 14 To Do. The backend of M1–M4 is in `main` (50 backend tests and 20 frontend tests, backend branch coverage 74 %); frontend pages and the first E2E test are planned for Week 8.
 
