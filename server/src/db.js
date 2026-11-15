@@ -10,6 +10,7 @@ const SCHEMA_DIR = path.join(__dirname, 'schema');
 function openDb(file = process.env.DB_FILE || path.join(__dirname, '..', 'serpent.db')) {
   const db = new Database(file);
   db.pragma('foreign_keys = ON');
+
   db.exec(`
     CREATE TABLE IF NOT EXISTS app_info (
       id INTEGER PRIMARY KEY,
@@ -17,6 +18,7 @@ function openDb(file = process.env.DB_FILE || path.join(__dirname, '..', 'serpen
       version TEXT NOT NULL
     );
   `);
+
   db.prepare(
     "INSERT OR IGNORE INTO app_info (id, name, version) VALUES (1, 'Serpent', '0.0.0')"
   ).run();
@@ -24,9 +26,11 @@ function openDb(file = process.env.DB_FILE || path.join(__dirname, '..', 'serpen
   const schemaFiles = fs.existsSync(SCHEMA_DIR)
     ? fs.readdirSync(SCHEMA_DIR).filter((f) => f.endsWith('.sql')).sort()
     : [];
+
   for (const f of schemaFiles) {
     db.exec(fs.readFileSync(path.join(SCHEMA_DIR, f), 'utf8'));
   }
+
   return db;
 }
 
