@@ -1,13 +1,13 @@
 # Project Management Plan (PMP)
 
 **Team:** Serpent (Group 11, Section 1)  
-**Last updated:** 2026-11-03
+**Last updated:** 2026-11-15
 
 | Section | Content | Required by | Status |
 |---|---|---|---|
 | PMP-1 | Project, Jira setup, team and roles | Week 5 | Done |
 | PMP-2 | Work packages (epics) and sprint plan | Week 5 / 6 | Done |
-| PMP-3 | Progress review: mid-term (v0.1) | Week 7 | Not started |
+| PMP-3 | Progress review: mid-term (v0.1) | Week 7 | Done (status as of 15 Nov; updated at v0.1) |
 | PMP-4 | Progress review: v0.2 | Week 9 | Not started |
 | PMP-5 | Progress review: final (v1.0) | Week 11 | Not started |
 | PMP-6 | Retrospective | Week 12 | Not started |
@@ -78,13 +78,38 @@ Two-week sprints aligned with the course schedule.
 
 ## PMP-3. Progress Review: Mid-term (v0.1)
 
-**Jira board screenshot:**  
+**Status as of:** 2026-11-15 (end of Week 7, middle of Sprint 2). This table will be updated when v0.1 is released (2026-11-21).
+
+**Jira board screenshot:**
+
+![Jira board, Sprint 2, 2026-11-15](img/pmp3-jira-board.png)
+
+**Sprint 2 in numbers:** 23 tasks – 9 Done, 14 To Do. The backend of M1–M4 is in `main` (50 backend tests and 20 frontend tests, backend branch coverage 74 %); frontend pages and the first E2E test are planned for Week 8.
 
 | Epic | Planned for this point | Status (Done / In progress / Not started) |
 |---|---|---|
-| | | |
+| SRS | SRS final version (Week 6) | Done |
+| DESIGN | SDD final version (Week 6) | Done |
+| PMP-1, PMP-2 | Project, team, epics and sprint plan | Done |
+| PMP-3 | Mid-term progress review | Done (this section; updated at v0.1) |
+| M1 – Login and roles | Users table and seed, login API with JWT, auth middleware, login page, tests and E2E login test | In progress – backend done (SCRUM-26, 27, 28, 98); login page (SCRUM-29) and tests/E2E (SCRUM-31) in Week 8 |
+| M2 – Linking specialists | Link/unlink API, child access check, linked specialists page, specialist's children list, API tests | In progress – API and access check done (SCRUM-36, 48); pages and API tests (SCRUM-49, 50, 51) in Week 8 |
+| M3 – Weekly schedule | Events API, access rules, weekly view, tests | In progress – events API done (SCRUM-37); access rules, weekly view and tests (SCRUM-39, 40, 41) in Week 8 |
+| M4 – Tasks | Tasks API, assign task form, child's task list, assigner's status list, tests and E2E test | In progress – tasks API and assign form done (SCRUM-68, 69); lists and tests (SCRUM-70, 71, 72) in Week 8 |
+| M5 – Specialist entries | Planned for Sprint 3 | Not started (as planned) |
+| M6 – Documents | Planned for Sprint 3 | Not started (as planned) |
+| M7 – Weekly statistics | Planned for Sprint 3 | Not started (as planned) |
+| M8 – Role-based AI summary | Planned for Sprint 3 | Not started (as planned) |
 
 **Changes to the plan (if any):**
+
+1. **Sprint 1 → Sprint 1b.** Sprint 1 was closed early in Jira by mistake. Its open SRS and DESIGN tasks were moved to a new Sprint 1b, which ended on 2026-11-08 with both documents delivered.
+2. **M7 owner changed.** M7 (Weekly statistics) moved from İlker Bulut to Rasül Hakan Fidan to balance the workload; the PMP-2 table and Jira were updated.
+3. **Late deliveries in Sprint 1.** PMP-2 and the walking skeleton (v0.0) were delivered later than planned (Week 5).
+4. **Workload balanced inside Sprint 2.** Every member does backend and frontend work in every sprint. Because no M6/M7 work is planned in Sprint 2, four Sprint 2 tasks were reassigned to Rasül Hakan Fidan at sprint planning (SCRUM-27, 50, 51, 70). The module–sprint plan in PMP-2 is unchanged; tasks will be rebalanced the same way in Sprint 3.
+5. **New task for a shared backend structure (SCRUM-98).** To avoid merge conflicts when five members add tables and routes at the same time, each module now adds its own files (`server/src/schema/*.sql`, `server/src/routes/*.js`), which the app loads automatically; shared test helpers were added at the same time.
+6. **Week 7 milestones slipped by one to two days.** The backend of M1–M4 was planned to be in `main` by 2026-11-14 and was merged on 2026-11-15. One pull request (#18) waited five days for review. Since then the project manager checks open pull requests every day.
+7. **Process changes.** `main` is protected (pull request, one approval and passing CI required). The weekly team meeting is fixed to Sundays at 20:00.
 
 ---
 
