@@ -1,50 +1,11 @@
 
 const request = require('supertest');
-
-// Mock SCRUM-28 authentication until its branch is merged.
-// The role and user ID come from test-only headers.
-jest.mock('../src/middleware/auth', () => ({
-  authenticate: (req, res, next) => {
-    const id = Number(req.headers['x-test-user-id']);
-    const role = req.headers['x-test-role'];
-
-    if (!Number.isInteger(id) || id <= 0 || !role) {
-      return res.status(401).json({ error: 'Login required' });
-    }
-
-    req.user = { id, role };
-    next();
-  }
-}), { virtual: true });
-
+const { makeToken } = require('./helpers');
 const { createApp } = require('../src/app');
 const { openDb } = require('../src/db');
 
 function setup() {
   const db = openDb(':memory:');
-
-  // Temporary fixture tables for integration dependencies.
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY,
-      email TEXT NOT NULL UNIQUE,
-      passwordHash TEXT NOT NULL,
-      name TEXT NOT NULL,
-      role TEXT NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS children (
-      id INTEGER PRIMARY KEY,
-      parentId INTEGER NOT NULL,
-      userId INTEGER NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS specialist_links (
-      id INTEGER PRIMARY KEY,
-      childId INTEGER NOT NULL,
-      specialistId INTEGER NOT NULL
-    );
-  `);
 
   const insertUser = db.prepare(`
     INSERT INTO users (id, email, passwordHash, name, role)
@@ -57,13 +18,15 @@ function setup() {
   insertUser.run(4, 'other@test.local', 'Other Parent', 'parent');
 
   db.prepare(`
-    INSERT INTO children (id, parentId, userId)
-    VALUES (10, 1, 2)
+    INSERT INTO children (id, parentId, userId, name)
+    VALUES (10, 1, 2, 'Test Child')
   `).run();
 
   db.prepare(`
-    INSERT INTO specialist_links (id, childId, specialistId)
-    VALUES (20, 10, 3)
+    INSERT INTO specialist_links (
+      id, childId, specialistId, specialistType
+    )
+    VALUES (20, 10, 3, 'teacher')
   `).run();
 
   return { db, app: createApp(db) };
@@ -71,8 +34,7 @@ function setup() {
 
 function asUser(app, method, url, id, role) {
   return request(app)[method](url)
-    .set('x-test-user-id', String(id))
-    .set('x-test-role', role);
+    .set('Authorization', `Bearer ${makeToken({ id, role })}`);
 }
 
 const baseUrl = '/api/children/10/tasks';
